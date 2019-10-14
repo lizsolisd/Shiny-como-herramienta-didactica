@@ -395,29 +395,8 @@ setupDescriptivaListeners <- function(input, output, session, label = "leerArchi
        types[colName] == "integer" |
        types[colName] == "double") {
       valores <- unlist(DF[input$valoresY]) 
-      distincts <- unique(valores)
-      maxValue <- max(distincts) +1
-      distincts <- c(distincts, maxValue )
-      hg <- hist(valores, breaks = distincts, plot = FALSE, right = FALSE) 
-      bins <- length(hg$counts)
-      yvals <- numeric(0)
-      for(i in 1:bins) {
-        yvals <- c(yvals, hg$counts[i]:0)
-      }
-      xvals <- numeric(0)
-      for(i in 1:bins) { 
-        xvals <- c(xvals, rep(hg$mids[i], hg$counts[i]+1))
-      }
-      dat <- data.frame(xvals, yvals)
-      dat <- dat[yvals > 0, ]
-      minx <- min(hg$breaks)
-      maxx <- max(hg$breaks)
-      miny <- min(dat$yvals)
-      maxy <- max(dat$yvals) +1 
       par(bg = "#ccefff")
-      plot(yvals + 0.4 ~ xvals, data = dat, xlim = c(minx, maxx), ylim = c(miny, maxy),col = "#3366ff",
-           axes = FALSE, ylab = "", xlab = sprintf("%s",input$valores), xpd = NA, cex = 2, pch = 19)
-      axis(1)   # Add in the x-axis
+      stripchart(valores, method = "stack", offset = .5, at = .15, pch = 19, col= "blue", main = 'Gráfico de Puntos')
     } else {
       showNotification("los valores de la gráfica deben ser númericos",closeButton = TRUE, type = "error")
     }
@@ -479,62 +458,66 @@ setupDescriptivaListeners <- function(input, output, session, label = "leerArchi
       return(tags$pre(tags$code(
 "## codigo para imprimir histograma
 
-hist(df = valores , col='#color hexadecimal', ylab = 'frecuencia', xlab = 'label X', labels = TRUE) ")))
+hist(df = Vector de valores ,
+    ylab = 'Frecuencia', 
+    xlab = 'Etiqueta del Eje X, labels = TRUE)")))
       }else if(codigoMostrar == "Barras") {
         return(tags$pre(tags$code("
 ##Codigo para imprimir Grafica de barras
 
-barplot(height = heightValues, names.arg = labelvalues, col='#color hexadecimal',  xlab = 'Label X', ylab = 'Label Y')")))
+barplot(height = Vector con valores numericos, 
+        names.arg = Vector de etiquetas, 
+        xlab = 'Etiqueta del Eje X', 
+        ylab = 'Etiqueta del Eje Y')")))
       }else if(codigoMostrar == "Pastel") {
         return(tags$pre(tags$code("
 ##Codigo para mostrar Grafica de pastel
-pie(MiListaDeValores, labels = MiListaDeLabels, main = 'Titulo De Pastel')")))
+pie(x = Vector de valores no negativos a graficar, 
+    labels = Lista de etiquetas, 
+    main = 'Titulo De Pastel')")))
       }else if(codigoMostrar == "Ojiva") {
         return(tags$pre(tags$code("
 ##Codigo para mostrar Grafica de Ojiva
 
-tabla <- table(listaDeValores)
-plot(sort(unique(listaDeValores)), cumsum(prop.table(tabla)), 
-    ylim = c(0,1), type = 'lines', lwd = 2.5, col = '#3366ff',
-    xlab = colName, ylab = 'Frecuencia Relativa Acumulada')
+tabla <- table(x = ValoresX)
 
+plot(x = sort(unique(Vector de valores)), ## Valores numericos unicos ordenados
+    y = cumsum(prop.table(tabla)), ## Frecuencia acumulada previamente guardada en la variable tabla
+    ylim = c(0,1), type = 'lines', lwd = 2.5,
+    xlab = 'Etiqueta del Eje X', 
+    ylab = 'Frecuencia Relativa Acumulada')
  ")))
       }else if(codigoMostrar == "Boxplot") {
         return(tags$pre(tags$code("
 ##Codigo para mostrar Grafica de boxplot
 
-boxplot(MiDataFrame, main = 'TituloDelBoxPlot')
-               ")))
+boxplot(x = Datos o vector numerico, 
+    main = 'Titulo del Boxplot')")))
       }else if(codigoMostrar == "Tallo y Hojas") {
         return(tags$pre(tags$code("
 ##Codigo para mostrar los tallos y hojas
 
-stem( MiListaDeValores)")))
+stem(x = Vector de valores numericos)")))
       }else if(codigoMostrar == "Gráfico De puntos") {
         return(tags$pre(tags$code("
 
 ##Codigo para mostrar graficos de puntos
 
-#Obtener el histograma
-hg <- hist(MiListaDeValores, breaks = 'sturges', plot = FALSE) 
-bins <- length(hg$counts)
-yvals <- c(0, hg$counts)
-xvals <- c(0, rep(hg$mids, hg$counts))
-data <- data.frame(xvals, yvals)
-
-plot(yvals ~ xvals, data = data ,col = '#color hexadecimal', axes = FALSE, 
-    ylab = '', pch = 19)# pch es el plot character 
-    axis(1)   #incluir el eje X ")))
+stripchart(valores, method = 'stack', offset = .5, at = .15, pch = 19, col= 'blue', main = 'Titulo')")))
       }else if(codigoMostrar == "Dispersión") {
         return(tags$pre(tags$code("
 
 ##Codigo para mostrar la grafica de dispersion
 
-medianY <- median(valoresY)
-medianX <- median(valoresX)
-plot(valoresX, valoresY, main = 'Titulo de la Grafica', xlab = 'Label en X', ylab = 'Label en Y')
-abline(v=medianX, col='blue')
-abline(h=medianY, col='red')")))
+medianY <- median(x = valores Y) ## Calcular la mediana de Y
+medianX <- median(x = valores X) ## Calcular la mediana de X
+
+plot(x = valoresX, y = valoresY, 
+    main = 'Titulo de la Grafica', 
+    xlab = 'Etiqueta del Eje X', ylab = 'Etiqueta del Eje Y')
+
+abline(v = medianX, col='blue') ## Agrega linea vertical con la mediana de X
+abline(h = medianY, col='red') ## Agrega linea horizontal con la mediana de Y")))
   }
 
       
