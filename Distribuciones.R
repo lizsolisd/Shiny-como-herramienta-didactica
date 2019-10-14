@@ -36,7 +36,7 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
     if(tema$seleccion == "F" || tema$seleccion == "T") {
       tituloEstadistico <- "Valores Críticos"
     }
-    tmptitle <- "masa de Probabilidad"
+    tmptitle <- "Masa de Probabilidad"
     if(!tema$discreta) {
       tmptitle <- "Densidad"
     }
@@ -151,7 +151,7 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
     
     ## Distribucion de probabilidad
     plot(x = tabulacion$x, y =tabulacion$Probabilidad, xlab="x", ylab="Probabilidad", 
-         col="blue", lwd=1.5, main="Función de masa de Probabilidad", type = "h", lty = 3) 
+         col="blue", lwd=1.5, main="Función de Masa de Probabilidad", type = "h", lty = 3) 
     points(tabulacion$x, tabulacion$Probabilidad, pch = 19, col = "blue") 
   }
   
@@ -280,7 +280,7 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
     
     ## Distribucion de probabilidad
     plot(x = tabulacion$x, y =tabulacion$Probabilidad, xlab="x", ylab="Probabilidad", 
-         col="blue", lwd=1.5, main="Función de masa de Probabilidad", type = "h",  pch = 19, lty = 3, cex = 5)
+         col="blue", lwd=1.5, main="Función de Masa de Probabilidad", type = "h",  pch = 19, lty = 3, cex = 5)
     points(tabulacion$x, tabulacion$Probabilidad, pch = 19, col = "blue") 
   }
   
@@ -398,7 +398,7 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
     
     ## Distribucion de probabilidad
     plot(x = tabulacion$x, y =tabulacion$Probabilidad, xlab="x", ylab="Probabilidad", 
-         col="blue", lwd=1.5, main="Función de masa de Probabilidad", pch = 16, type = "h", lty = 3)
+         col="blue", lwd=1.5, main="Función de Masa de Probabilidad", pch = 16, type = "h", lty = 3)
     points(tabulacion$x, tabulacion$Probabilidad, pch = 19, col = "blue") 
     
   }

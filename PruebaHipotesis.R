@@ -237,24 +237,25 @@ setupHipotesisListeners <- function(input, output, session, label = "hipotesis")
     #     type="l",ylim=c(0,1), col = 'blue')
     plot(xValues, yValues, type='l',ylim=ylim, xlim = xLim, col = 'purple', ylab = "Potencia", 
          xlab = "", main = "Función Potencia",lwd = 2)
-    text(xValues[1], alpha_error + 0.03, "alpha", srt=0.2, col = "blue")
-    mtext("µ0", side = 1, at = input$mu_0, padj = 5, font = 2, cex = 1.2, col = color1)
-    mtext("µ1", side = 1, at = input$mu_1, padj = 5, font = 2, cex = 1.2, col = color2)
+    text(xValues[1], alpha_error + 0.03, "alpha", srt=0.2, col = "salmon")
+    mtext("µ0", side = 1, at = input$mu_0, padj = 5, font = 2, cex = 1.2, col = 'salmon')
+    mtext("µ1", side = 1, at = input$mu_1, padj = 5, font = 2, cex = 1.2, col = 'darkcyan')
     
     breakValue <- 1-value$error_t2
-    lines(c(xValues[1], input$mu_0), c(alpha_error, alpha_error), col = 'blue', lty = 2, lwd = 2)
-    lines(c(input$mu_0, input$mu_0), c(0, alpha_error), col = 'blue', lty = 2, lwd = 2)
+    lines(c(xValues[1], input$mu_0), c(alpha_error, alpha_error), col = 'salmon', lty = 2, lwd = 2)
+    lines(c(input$mu_0, input$mu_0), c(0, alpha_error), col = 'salmon', lty = 2, lwd = 2)
     
     lines(c(input$mu_1,input$mu_1), c(0,breakValue), lty = 2, lwd=2)#black dotted vertical
     lines(c(xValues[1],input$mu_1), c(breakValue,breakValue), lty = 2, lwd=2) #black dotted horizontal
     
-    lines(c(input$mu_1,input$mu_1), c(breakValue,1),lty = 2, lwd=2, col=color2) #red dotted vertical
+    lines(c(input$mu_1,input$mu_1), c(breakValue,1),lty = 2, lwd=2, col='darkcyan') #red dotted vertical
     if(input$mu_0 < input$mu_1){
       x_pot_label <- input$mu_1 - (tail(xValues, n=1) - xValues[1])/10
     }else{
       x_pot_label <- input$mu_1 + (tail(xValues, n=1) - xValues[1])/10
     }
-    text(x_pot_label, (1+ breakValue)/2, paste("beta = " , round(1-breakValue, digits = 3), sep=""), srt=0.2, col = color2)
+    text(x_pot_label, (1+ breakValue)/2, paste("beta = " , round(1-breakValue, digits = 3), sep=""), 
+         srt=0.2, col = 'darkcyan')
   })
   
 }
