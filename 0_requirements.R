@@ -26,7 +26,7 @@ if("knitr" %in% rownames(installed.packages()) == FALSE) {
 }else cat("\nknitr already installed\n")
 
 if("combinat" %in% rownames(installed.packages()) == FALSE) {
-  install_version("combinat", version = "0.0.8")
+  install_version("combinat", version = "0.0-8")
 }else cat("\ncombinat already installed\n")
 
 if("shiny" %in% rownames(installed.packages()) == FALSE) {
