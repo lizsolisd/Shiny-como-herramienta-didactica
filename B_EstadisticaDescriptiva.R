@@ -34,7 +34,7 @@ renderTableUI <- function(id = "leerArchivo", label = "leerArchivo") {
     ),
     #tabPanel("Tabla Dinámica", rpivotTableOutput(ns("pivoteTable"))),
     tabPanel("Visualización de Datos", 
-             mainPanel( selectInput(ns("tipoGrafica"), "Visualizacion", 
+             mainPanel( selectInput(ns("tipoGrafica"), "Tipo de gráfico", 
                     c("Histograma","Barras","Pastel","Ojiva","Boxplot", "Tallo y Hojas", "Gráfico De puntos", "Dispersión")),
                     uiOutput(ns("visualizacion")),
                     downloadButton(ns('guardarExport'), 'Exportar Imagen'),

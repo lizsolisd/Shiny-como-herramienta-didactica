@@ -2,10 +2,10 @@
 library(shiny)
 library(shinydashboard)
 
-source("Distribuciones.R")
-source("EstadisticaDescriptiva.R")
-source("PruebaHipotesis.R")
-source("Conteo.R")
+source("C_Distribuciones.R")
+source("B_EstadisticaDescriptiva.R")
+source("D_PruebaHipotesis.R")
+source("A_Conteo.R")
 
 mostrarTituloYTemas <- function(id, label = "base") {
   ns <- NS(id)

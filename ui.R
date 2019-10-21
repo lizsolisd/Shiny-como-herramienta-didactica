@@ -1,6 +1,6 @@
 library(shiny)
 library(dplyr)
-source("BasePage.R")
+source("E_BasePage.R")
 
 # Define UI for application thast draws a histogram
 shinyUI(fluidPage(

@@ -1,4 +1,4 @@
-library(pwr)
+# library(pwr)
 # Prueba de hipotesis
 mostrarPantallaHipotesis <- function(id= "hipotesis", label = "hipotesis") {
   ns <- NS(id)

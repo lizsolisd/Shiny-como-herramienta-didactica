@@ -3,10 +3,11 @@ if (Sys.getlocale()!="en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/C"){
   Sys.setlocale("LC_ALL", 'en_US.UTF-8')
 }
 
-source("Distribuciones.R")
-source("EstadisticaDescriptiva.R")
-source("PruebaHipotesis.R")
-source("Conteo.R")
+source("A_Conteo.R")
+source("B_EstadisticaDescriptiva.R")
+source("C_Distribuciones.R")
+source("D_PruebaHipotesis.R")
+
 
 # Define server logic required to draw a histogram
 shinyServer(function(input, output) {
