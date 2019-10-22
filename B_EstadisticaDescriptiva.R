@@ -6,7 +6,7 @@ library(rpivotTable)
 renderBaseTableOption <- function(id = "leerArchivo", label = "leerArchivo") {
   ns <- NS(id)
   tagList(
-    selectInput(ns("mode"),"Cargar desde:" ,c("Archivo", "Llenado de Tabla")),
+    selectInput(ns("mode"),"Cargar desde:" ,c("Archivo", "Llenado de Tabla", "Datos de prueba")),
     conditionalPanel (
       condition = "input['leerArchivo-mode'] == 'Archivo'",
       uiOutput(ns("renderReadFileoptions"))  
@@ -14,6 +14,10 @@ renderBaseTableOption <- function(id = "leerArchivo", label = "leerArchivo") {
     conditionalPanel (
       condition = "input['leerArchivo-mode'] == 'Llenado de Tabla'",
       uiOutput(ns("renderInputTableoptions"))
+    ),
+    conditionalPanel (
+      condition = "input['leerArchivo-mode'] == 'Datos de prueba'",
+      uiOutput(ns("renderTestData"))
     )
   )
 }
@@ -23,14 +27,14 @@ renderTableUI <- function(id = "leerArchivo", label = "leerArchivo") {
   tabsetPanel(
     tabPanel("Tabla",
       conditionalPanel (
-        condition = "input['leerArchivo-mode'] == 'Archivo'",
+        condition = "input['leerArchivo-mode'] == 'Archivo' | input['leerArchivo-mode'] == 'Datos de prueba'",
         tags$div(style='padding-top:20px;', 
            dataTableOutput(ns("tableUI")))
       ),
       conditionalPanel (
         condition = "input['leerArchivo-mode'] == 'Llenado de Tabla'",
         tagList(h4("Captura los campos y escribe los valores"),rHandsontableOutput(ns("inputTableUI")))
-      )       
+      )
     ),
     #tabPanel("Tabla Dinámica", rpivotTableOutput(ns("pivoteTable"))),
     tabPanel("Visualización de Datos", 
@@ -84,6 +88,11 @@ setupDescriptivaListeners <- function(input, output, session, label = "leerArchi
     )
   })
   
+  output$renderTestData <- renderUI({
+    datos_prueba <- USArrests
+    tags$div(style='padding-left:20px;',h5("Datos de prueba de USArrests"))
+  })
+  
   output$tableUI <- renderDataTable({
     DF <- getAvailableDF()
     return(DF)
@@ -133,9 +142,11 @@ setupDescriptivaListeners <- function(input, output, session, label = "leerArchi
     DF <- NULL
     if(input$mode == "Archivo") {
       DF <- dataframe()
-    } else {
+    } else if(input$mode == "Llenado de Tabla") {
       tableValues$table <- hot_to_r(input$inputTableUI)
       DF <- tableValues$table
+    } else {
+      DF <- USArrests
     }
     return(DF)
   }
@@ -234,8 +245,7 @@ setupDescriptivaListeners <- function(input, output, session, label = "leerArchi
   output$imprimirSelectorBarras <- renderUI( {
     DF <- getAvailableDF()
     columnas <- colnames(DF)
-    tagList(selectInput(ns("valoresX"),"etiquetas", columnas),
-            selectInput(ns("valoresY"),"valores", columnas))
+    tagList(selectInput(ns("valoresY"),"valores", columnas))
   })
   graficaBarras <- function(){
     DF <- getAvailableDF()
@@ -252,16 +262,12 @@ setupDescriptivaListeners <- function(input, output, session, label = "leerArchi
       showNotification("los valores de la gráfica deben ser numéricos",closeButton = TRUE, type = "error")
       return()
     }
-    maxy <- max(heightValues) + 3
+
     
-    labelvalues <-  data.frame(DF)[,make.names(sprintf("%s",input$valoresX))]
 
     par(bg = "#ccefff")
-    barpos <- barplot(height = heightValues, names.arg = labelvalues, col="#6F45B9", legend.text = TRUE,
-                      xlab = sprintf("%s",input$valoresX), ylab = sprintf("%s",input$valoresY),
-                      las = 2, ylim  = c(0,maxy))  
-    text(barpos, y = heightValues, label = heightValues, pos = 3, cex = 0.8, col = "#6F45B9")
-    axis(1, labels = FALSE)
+    counts <- table(heightValues)
+    barpos <- barplot(height = counts,  col="#6F45B9", las = 2)  
   }
   
   #Pastel
@@ -297,6 +303,7 @@ setupDescriptivaListeners <- function(input, output, session, label = "leerArchi
       unlist()
     
     par(bg = "#ccefff")
+    mytable <- table(slices)
     pie(slices, labels = newLabels, main = "Pastel", bg =NA)
   }
   
@@ -332,14 +339,24 @@ setupDescriptivaListeners <- function(input, output, session, label = "leerArchi
   #Boxplot
   #
   output$imprimirSelectorBoxplot <- renderUI( {
-    #vacio porque no se selecciona nada solo se imprime
+    DF <- getAvailableDF()
+    columnas <- colnames(DF)
+    selectInput(ns("valoresY"),"valores", columnas)
   })
   graficaBoxplot <- function(){
     DF <- getAvailableDF()
     
-    newDF <- data.frame(lapply(DF, function(x) as.numeric(as.character(x))))
-    par(bg = "#ccefff")
-    boxplot(newDF, main = "Boxplot", las = 2)
+    types <- sapply(DF,typeof)
+    colName <- sprintf("%s",input$valoresY)
+    if(types[sprintf("%s",input$valoresY)] == "numeric" | 
+       types[sprintf("%s",input$valoresY)] == "integer" |
+       types[sprintf("%s",input$valoresY)] == "double") {
+      columData <- unlist(DF[colName])
+      par(bg = "#ccefff")
+      boxplot(columData, main = "Boxplot", las = 2)
+    } else {
+      showNotification("los valores de la gráfica deben ser numericos",closeButton = TRUE, type = "error")
+    }
   }
   
   #Tallo y hojas
@@ -465,14 +482,13 @@ hist(df = Vector de valores ,
         return(tags$pre(tags$code("
 ##Código para imprimir Gráfica de barras
 
-barplot(height = Vector con valores numéricos, 
-        names.arg = Vector de etiquetas, 
-        xlab = 'Etiqueta del Eje X', 
-        ylab = 'Etiqueta del Eje Y')")))
+tabla <- table(Vector con valores numéricos)
+barplot(height = tabla)")))
       }else if(codigoMostrar == "Pastel") {
         return(tags$pre(tags$code("
 ##Código para mostrar Gráfica de pastel
-pie(x = Vector de valores no negativos a graficar, 
+tabla <- table(Vector de valores no negativos a graficar)
+pie(x = tabla, 
     labels = Lista de etiquetas, 
     main = 'Título De Pastel')")))
       }else if(codigoMostrar == "Ojiva") {
@@ -625,4 +641,8 @@ table.freq <- function(object) {
     z<-as.data.frame(z)
     invisible(z)
 }
+
+
+## > datos_prueba <- USArrests
+
 
