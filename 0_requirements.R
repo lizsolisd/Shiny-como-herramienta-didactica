@@ -21,9 +21,9 @@ if("rpivotTable" %in% rownames(installed.packages()) == FALSE) {
   install_version("rpivotTable", version = "0.3.0")
 }else cat("\nrpivotTable already installed\n")
 
-if("knitr" %in% rownames(installed.packages()) == FALSE) {
-  install_version("knitr", version = "1.22")
-}else cat("\nknitr already installed\n")
+#if("knitr" %in% rownames(installed.packages()) == FALSE) {
+#  install_version("knitr", version = "1.22")
+#}else cat("\nknitr already installed\n")
 
 if("combinat" %in% rownames(installed.packages()) == FALSE) {
   install_version("combinat", version = "0.0-8")
@@ -36,4 +36,5 @@ if("shiny" %in% rownames(installed.packages()) == FALSE) {
 if("shinydashboard" %in% rownames(installed.packages()) == FALSE) {
   install_version("shinydashboard", version = "0.7.1")
 }else cat("\nshinydashboard already installed\n")
+
 
