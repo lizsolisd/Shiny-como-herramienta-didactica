@@ -6,7 +6,11 @@ library(rpivotTable)
 renderBaseTableOption <- function(id = "leerArchivo", label = "leerArchivo") {
   ns <- NS(id)
   tagList(
-    selectInput(ns("mode"),"Cargar desde:" ,c("Archivo", "Llenado de Tabla", "Datos de prueba")),
+    selectInput(ns("mode"),"Cargar desde:" ,
+                c("Archivo",
+                  "Llenado de Tabla",
+                  "Datos de prueba USArrest", 
+                  "Datos de prueba Iris")),
     conditionalPanel (
       condition = "input['leerArchivo-mode'] == 'Archivo'",
       uiOutput(ns("renderReadFileoptions"))  
@@ -16,8 +20,12 @@ renderBaseTableOption <- function(id = "leerArchivo", label = "leerArchivo") {
       uiOutput(ns("renderInputTableoptions"))
     ),
     conditionalPanel (
-      condition = "input['leerArchivo-mode'] == 'Datos de prueba'",
+      condition = "input['leerArchivo-mode'] == 'Datos de prueba USArrest'",
       uiOutput(ns("renderTestData"))
+    ),
+    conditionalPanel (
+      condition = "input['leerArchivo-mode'] == 'Datos de prueba Iris'",
+      uiOutput(ns("renderTestDataIris"))
     )
   )
 }
@@ -27,9 +35,11 @@ renderTableUI <- function(id = "leerArchivo", label = "leerArchivo") {
   tabsetPanel(
     tabPanel("Tabla",
       conditionalPanel (
-        condition = "input['leerArchivo-mode'] == 'Archivo' | input['leerArchivo-mode'] == 'Datos de prueba'",
+        condition = "input['leerArchivo-mode'] == 'Archivo' | input['leerArchivo-mode'] == 'Datos de prueba USArrest' | input['leerArchivo-mode'] == 'Datos de prueba Iris'",
         tags$div(style='padding-top:20px;', 
-           dataTableOutput(ns("tableUI")))
+           DT::dataTableOutput(ns("tableUI")),
+           uiOutput(ns("filterOptions"))
+           )
       ),
       conditionalPanel (
         condition = "input['leerArchivo-mode'] == 'Llenado de Tabla'",
@@ -38,14 +48,15 @@ renderTableUI <- function(id = "leerArchivo", label = "leerArchivo") {
     ),
     #tabPanel("Tabla Dinámica", rpivotTableOutput(ns("pivoteTable"))),
     tabPanel("Visualización de Datos", 
-             mainPanel( selectInput(ns("tipoGrafica"), "Tipo de gráfico", 
-                    c("Histograma","Barras","Pastel","Ojiva","Boxplot", "Tallo y Hojas", "Gráfico De puntos", "Dispersión")),
-                    uiOutput(ns("visualizacion")),
-                    downloadButton(ns('guardarExport'), 'Exportar Imagen'),
-                    h4(sprintf("Código de la Gráfica")),
-                    uiOutput(ns('codigo'))
-                    )
-             )
+                tagList(
+                   tags$div(style="display:inline-block", selectInput(ns("tipoGrafica"), "Tipo de gráfico", c("Histograma","Barras","Pastel","Ojiva","Boxplot", "Tallo y Hojas", "Gráfico De puntos", "Dispersión"))),
+                    tags$div(style="display:inline-block: padding-left:20px", uiOutput(ns("filterFlag")))
+                  ),
+                  uiOutput(ns("visualizacion")),
+                  downloadButton(ns('guardarExport'), 'Exportar Imagen'),
+                  h4(sprintf("Código de la Gráfica")),
+                  uiOutput(ns('codigo'))
+            )
   )
 }
 
@@ -89,14 +100,17 @@ setupDescriptivaListeners <- function(input, output, session, label = "leerArchi
   })
   
   output$renderTestData <- renderUI({
-    datos_prueba <- USArrests
     tags$div(style='padding-left:20px;',h5("Datos de prueba de USArrests"))
   })
   
-  output$tableUI <- renderDataTable({
+  output$renderTestDataIris <- renderUI({
+    tags$div(style='padding-left:20px;',h5("Datos de prueba de Iris"))
+  })
+  
+  output$tableUI <- DT::renderDataTable({
     DF <- getAvailableDF()
     return(DF)
-  })
+  },  filter = "top")
  
   output$inputTableUI <- renderRHandsontable({
     if(is.null(tableValues$table)) {
@@ -139,18 +153,71 @@ setupDescriptivaListeners <- function(input, output, session, label = "leerArchi
   })
   
   getAvailableDF <- function() {
+    if(tableValues$useFilterData) {
+      return(tableValues$filteredData)
+    } 
     DF <- NULL
     if(input$mode == "Archivo") {
       DF <- dataframe()
     } else if(input$mode == "Llenado de Tabla") {
       tableValues$table <- hot_to_r(input$inputTableUI)
       DF <- tableValues$table
+    } else if(input$mode == "Datos de prueba USArrest") {
+      DF <- data.frame(row.names(USArrests), USArrests)
+      names(DF) <- c('State', names(USArrests))
+      row.names(DF) <- NULL
     } else {
-      DF <- USArrests
+      DF <- iris
     }
     return(DF)
   }
- 
+  
+  observeEvent(input$mode, {
+    tableValues$filteredData <- NULL
+    tableValues$useFilterData <- FALSE
+  })
+  
+  observeEvent(input$setFilterAsData, {
+    DF <- getAvailableDF()
+    tableValues$filteredData <- DF[c(input[["tableUI_rows_all"]]),]
+    tableValues$useFilterData <- TRUE
+  })
+  
+  observeEvent(input$deleteFilter, {
+    tableValues$filteredData <- NULL
+    tableValues$useFilterData <- FALSE
+  })
+  
+  output$saveFilteredData <- downloadHandler(
+    filename = function() { filename = "data.csv" },
+    content = function(file) {
+      DF <- getAvailableDF()
+      tableValues$filteredData <- DF[c(input[["tableUI_rows_all"]]),]
+      write.csv(tableValues$filteredData, file, row.names = FALSE)
+    }
+  )
+  
+  output$filterOptions <- renderUI({
+    DF <- getAvailableDF()
+    if(!is.null(DF)) {
+      tagList(actionButton(ns("setFilterAsData"),"Usar datos filtrados"),
+              actionButton(ns("deleteFilter"),"Regresar a datos originales") , 
+              downloadButton(ns("saveFilteredData"), "Exportar datos"))
+    }
+  })
+  
+  output$filterFlag <- renderUI({
+    text <- NULL
+    if(tableValues$useFilterData) {
+      text <- "Nota: Graficando datos filtrados"
+    } else {
+      text <- ""
+    }
+    tagList(
+      renderText(text)
+    )
+  })
+  
   observeEvent(input$addcolumn, {
     DF <- tableValues$table
     
@@ -224,15 +291,18 @@ setupDescriptivaListeners <- function(input, output, session, label = "leerArchi
     DF <- getAvailableDF()
     types <- sapply(DF,class)
     colName <- sprintf("%s",input$columnaHist)
-    heightValues <- unlist(DF[,colName])
-    par(bg = "#ccefff")
-    cat(colName, "\n")
-    cat(make.names(colName), "\n")
-    cat(paste(types, ","), "\n")
-    hist(heightValues, col="#6F45B9", ylab = "Frecuencia absoluta",
-        xlab = sprintf("%s",input$columnaHist), labels = TRUE, 
-        las=2, main ='')
-    axis(1, labels = FALSE)
+    if(types[colName] == "numeric"| 
+         types[colName] == "integer" |
+         types[colName] == "double") {
+      heightValues <- unlist(DF[,colName])
+      par(bg = "#ccefff")
+      hist(heightValues, col="#6F45B9", ylab = "Frecuencia absoluta",
+          xlab = sprintf("%s",input$columnaHist), labels = TRUE, 
+          las=2, main ='Histograma')
+      axis(1, labels = FALSE) 
+    } else {
+      showNotification("los valores de la gráfica deben ser numéricos",closeButton = TRUE, type = "error")
+    }
   }
   output$imprimirSelectorHistograma <- renderUI({
     DF <- getAvailableDF()
@@ -250,24 +320,19 @@ setupDescriptivaListeners <- function(input, output, session, label = "leerArchi
   graficaBarras <- function(){
     DF <- getAvailableDF()
     colName <- make.names(sprintf("%s",input$valoresY))
-    cat(colName, "\n")
-    cat(make.names(colName), "\n")
-    heightValues <- data.frame(DF)[,colName]
+    heightValues <- data.frame(DF)[,colName] 
     types <- sapply(DF, class)
-    if(types[sprintf("%s",input$valoresY)] == "numeric"| 
-       types[sprintf("%s",input$valoresY)] == "integer" |
-       types[sprintf("%s",input$valoresY)] == "double") {
-     
-    } else {
-      showNotification("los valores de la gráfica deben ser numéricos",closeButton = TRUE, type = "error")
+    if(types[colName] == "numeric"| 
+       types[colName] == "integer" |
+       types[colName] == "double") {
+      showNotification("los valores de la gráfica deben ser categóricos",closeButton = TRUE, type = "error")
       return()
+    } else {
+      heightValues <- as.factor(heightValues)
     }
 
-    
-
     par(bg = "#ccefff")
-    counts <- table(heightValues)
-    barpos <- barplot(height = counts,  col="#6F45B9", las = 2)  
+    barpos <- plot(x = heightValues, col="#6F45B9", las = 2)
   }
   
   #Pastel
@@ -275,8 +340,7 @@ setupDescriptivaListeners <- function(input, output, session, label = "leerArchi
   output$imprimirSelectorPastel <- renderUI( {
     DF <- getAvailableDF()
     columnas <- colnames(DF)
-    tagList(selectInput(ns("valoresX"),"etiquetas", columnas),
-            selectInput(ns("valoresY"),"valores", columnas))
+    tagList(selectInput(ns("valoresY"),"variable", columnas))
   })
   graficaPastel <- function(){
     DF <- getAvailableDF()
@@ -285,26 +349,16 @@ setupDescriptivaListeners <- function(input, output, session, label = "leerArchi
     if(types[sprintf("%s",input$valoresY)] == "numeric"| 
        types[sprintf("%s",input$valoresY)] == "integer" |
        types[sprintf("%s",input$valoresY)] == "double") {
-      
-    } else {
-      showNotification("los valores de la gráfica deben ser numéricos",closeButton = TRUE, type = "error")
+      showNotification("los valores de la gráfica deben ser categóricos",closeButton = TRUE, type = "error")
       return()
+    } else {
+
     }
     
-    slices <- unlist(DF[,sprintf("%s",input$valoresY)])
-    
-    #total <- sum(slices)
-   
-    labelsValues <- data.frame(DF[,sprintf("%s",input$valoresX)])
-
-    newLabels <- labelsValues %>%
-      mutate(vlabel = sprintf("%s %.2f%%",labelsValues[,1], slices/sum(slices)*100)) %>% 
-                 select(vlabel) %>% 
-      unlist()
-    
     par(bg = "#ccefff")
-    mytable <- table(slices)
-    pie(slices, labels = newLabels, main = "Pastel", bg =NA)
+    mytable <- DF[,sprintf("%s",input$valoresY)] %>% table() %>% prop.table() %>% `*`(100)  %>%  round(2)
+    lbls <- paste(names(mytable), " ", mytable, "%",sep="")
+    pie(mytable, lbls, main = "Pastel", bg =NA)
   }
   
   #Ojiva
@@ -317,7 +371,7 @@ setupDescriptivaListeners <- function(input, output, session, label = "leerArchi
   graficaOjiva <- function(){
     DF <- getAvailableDF()
     
-    types <- sapply(DF,typeof)
+    types <- sapply(DF,class)
     colName <- sprintf("%s",input$valoresY)
     if(types[sprintf("%s",input$valoresY)] == "numeric" | 
        types[sprintf("%s",input$valoresY)] == "integer" |
@@ -332,7 +386,7 @@ setupDescriptivaListeners <- function(input, output, session, label = "leerArchi
            xlab = colName, ylab = "Frecuencia Relativa Acumulada")
       
     } else {
-      showNotification("los valores de la gráfica deben ser numericos",closeButton = TRUE, type = "error")
+      showNotification("los valores de la gráfica deben ser numéricos",closeButton = TRUE, type = "error")
     }
   }
   
@@ -341,21 +395,32 @@ setupDescriptivaListeners <- function(input, output, session, label = "leerArchi
   output$imprimirSelectorBoxplot <- renderUI( {
     DF <- getAvailableDF()
     columnas <- colnames(DF)
-    selectInput(ns("valoresY"),"valores", columnas)
+    colection <- columnas
+    names(colection) <- colection
+    checkboxGroupInput(ns("colums_selected"), "Variables:", colection)
   })
   graficaBoxplot <- function(){
     DF <- getAvailableDF()
-    
-    types <- sapply(DF,typeof)
-    colName <- sprintf("%s",input$valoresY)
-    if(types[sprintf("%s",input$valoresY)] == "numeric" | 
-       types[sprintf("%s",input$valoresY)] == "integer" |
-       types[sprintf("%s",input$valoresY)] == "double") {
-      columData <- unlist(DF[colName])
+    cols <- input$colums_selected
+    types <- sapply(DF,class)
+    displayCols <- NULL
+    for(name in cols) {
+      if(types[name] == "numeric" | types[name] == "integer" | types[name] == "double") {
+        if(class(DF[name]) == "factor") {
+          showNotification(sprintf("los valores de la gráfica deben ser numéricos, revisa '%s'", name),closeButton = TRUE, type = "error")
+        } else {
+          displayCols <- c(displayCols, name) 
+        }
+      } else {
+        showNotification(sprintf("los valores de la gráfica deben ser numéricos, revisa '%s'", name),closeButton = TRUE, type = "error")
+      }
+    }
+    if(length(displayCols) > 0)  {
+      displayDF <- DF[displayCols]
       par(bg = "#ccefff")
-      boxplot(columData, main = "Boxplot", las = 2)
+      boxplot(displayDF, main = "Boxplot", las = 2)
     } else {
-      showNotification("los valores de la gráfica deben ser numericos",closeButton = TRUE, type = "error")
+      renderText("Selecciona al menos una variable")
     }
   }
   
@@ -393,7 +458,7 @@ setupDescriptivaListeners <- function(input, output, session, label = "leerArchi
           }
         }
     } else {
-      showNotification("los valores de la gráfica deben ser númericos y mas de 1",closeButton = TRUE, type = "error")
+      showNotification("los valores de la gráfica deben ser numéricos y mas de 1",closeButton = TRUE, type = "error")
     }
   }
   
@@ -415,7 +480,7 @@ setupDescriptivaListeners <- function(input, output, session, label = "leerArchi
       par(bg = "#ccefff")
       stripchart(valores, method = "stack", offset = .5, at = .15, pch = 19, col= "blue", main = 'Gráfico de Puntos')
     } else {
-      showNotification("los valores de la gráfica deben ser númericos",closeButton = TRUE, type = "error")
+      showNotification("los valores de la gráfica deben ser numéricos",closeButton = TRUE, type = "error")
     }
   }
   
@@ -431,7 +496,7 @@ setupDescriptivaListeners <- function(input, output, session, label = "leerArchi
   })
   graficaDispersión <- function(){
     DF <- getAvailableDF()
-    types <- sapply(DF,typeof)
+    types <- sapply(DF,class)
     colName <- sprintf("%s",input$valoresY)
     colNameX <- sprintf("%s",input$valoresX)
     if((types[colName] == "numeric"| 
@@ -443,14 +508,17 @@ setupDescriptivaListeners <- function(input, output, session, label = "leerArchi
        )){
         valoresX <- unlist(DF[colNameX]) 
         valoresY <- unlist(DF[colName]) 
-        medianY <- median(valoresY)
-        medianX <- median(valoresX)
+        meanY <- mean(valoresY)
+        meanX <- mean(valoresX)
         par(bg = "#ccefff")
         plot(valoresX, valoresY, main = "Dispersión", xlab = colNameX, ylab = colName)
-        abline(v=medianX, col="blue")
-        abline(h=medianY, col="red")
+        abline(v=meanX, col="blue")
+        text(meanX, min(valoresY), as.character(round(meanX,2)), col = "blue")
+        abline(h=meanY, col="red")
+        text(min(valoresX), meanY, as.character(round(meanY,2)), col = "red")
+        
     } else {
-      showNotification("los valores de la gráfica deben ser númericos",closeButton = TRUE, type = "error")
+      showNotification("los valores de la gráfica deben ser numéricos",closeButton = TRUE, type = "error")
     }
   }
   
@@ -472,31 +540,41 @@ setupDescriptivaListeners <- function(input, output, session, label = "leerArchi
     codigoMostrar <- input$tipoGrafica
     #"Histograma","Barras","Pastel","Ojiva","Boxplot", "Tallo y Hojas", "Gráfico De puntos", "Dispersión"
     if(codigoMostrar == "Histograma") {
-      return(tags$pre(tags$code(
-"## Código para imprimir histograma
-
+      return(tags$pre(tags$code("# Código para generar histograma
+# Para mayor detalle de la función en la consola de R ejecutar: ?hist
 hist(df = Vector de valores ,
     ylab = 'Frecuencia', 
     xlab = 'Etiqueta del Eje X, labels = TRUE)")))
       }else if(codigoMostrar == "Barras") {
-        return(tags$pre(tags$code("
-##Código para imprimir Gráfica de barras
-
-tabla <- table(Vector con valores numéricos)
-barplot(height = tabla)")))
+        return(tags$pre(tags$code("# Código para generar gráfica de barras
+# Para mayor detalle de la función en la consola de R ejecutar: ?plot
+plot(x = véctor de valores categóricos)"
+                                  )))
       }else if(codigoMostrar == "Pastel") {
-        return(tags$pre(tags$code("
-##Código para mostrar Gráfica de pastel
-tabla <- table(Vector de valores no negativos a graficar)
-pie(x = tabla, 
-    labels = Lista de etiquetas, 
-    main = 'Título De Pastel')")))
+        return(tags$pre(tags$code("# Código para generar gráfica de pastel
+# Para mayor detalle de la función en la consola de R ejecutar: ?pie
+library(dplyr) ## Paquete que permite el uso del pipe %>% 
+## 1) Calcular frecuencia relativa
+mytable <- nombre_dataframe$nombre_columna_categorica %>% ## Selecciona columna categórica
+table() %>% ## Obtiene frecuencia absoluta por categoria
+prop.table() %>% `*`(100)  %>%  round(2)  ## Frecuencia relativa en porcentaje
+## 2) Generar etiquetas para gráfico
+lbls <- paste(names(mytable), ' ', mytable, '%',sep='')  
+## 3) Obtener gráfica de pastel
+pie(x = mytable, labels = lbls, main = 'Pastel', bg =NA) 
+# Solución alterna
+library(dplyr)
+## 1) Obtener etiquetas y frecuencias relativas
+input_pie <- nombre_data_frame %>% group_by(nombre_columna_categorica) %>% count() %>%  
+    mutate(prop = round(n*100/nrow(df),2), etiquetas = paste0(nombre_columna_categorica, ' ', as.character(prop),'%'))
+## 2) Graficar
+pie(x = input_pie$prop, labels = input_pie$etiquetas)
+                                  ")))
       }else if(codigoMostrar == "Ojiva") {
         return(tags$pre(tags$code("
-##Código para mostrar Gráfica de Ojiva
-
-tabla <- table(x = ValoresX)
-
+# Código para Ojiva
+# Para mayor detalle de la función en la consola de R ejecutar: ?plot
+tabla <- table(x = ValoresX) 
 plot(x = sort(unique(Vector de valores)), ## Valores numéricos únicos ordenados
     y = cumsum(prop.table(tabla)), ## Frecuencia acumulada previamente guardada en la variable tabla
     ylim = c(0,1), type = 'lines', lwd = 2.5,
@@ -505,35 +583,38 @@ plot(x = sort(unique(Vector de valores)), ## Valores numéricos únicos ordenado
  ")))
       }else if(codigoMostrar == "Boxplot") {
         return(tags$pre(tags$code("
-##Código para mostrar Boxplot
-
-boxplot(x = Datos o vector numérico, 
-    main = 'Título del Boxplot')")))
+# Código para  Boxplot
+# Para mayor detalle de la función en la consola de R ejecutar: ?boxplot
+boxplot(nombre_data_frame[c('nombre_columna_1', ..., 'nombre_columna_N')], 
+    main = 'Título del Boxplot')
+")))
       }else if(codigoMostrar == "Tallo y Hojas") {
         return(tags$pre(tags$code("
-##Código para mostrar Diagrama de Tallo y Hojas
-
+# Código para Diagrama de Tallo y Hojas
+# Para mayor detalle de la función en la consola de R ejecutar: ?stem
 stem(x = Vector de valores numéricos)")))
       }else if(codigoMostrar == "Gráfico De puntos") {
         return(tags$pre(tags$code("
-
-##Código para mostrar Gráfico De Puntos
-
-stripchart(valores, method = 'stack', offset = .5, at = .15, pch = 19, col= 'blue', main = 'Titulo')")))
+# Código para generar gráfico de puntos
+# Para mayor detalle de la función en la consola de R ejecutar: ?stripchart
+stripchart(véctor numérico, method = 'stack', offset = .5, at = .15, pch = 19, col= 'blue', main = 'Titulo')")))
       }else if(codigoMostrar == "Dispersión") {
         return(tags$pre(tags$code("
-
-##Código para mostrar la gráfica de dispersión
-
-medianY <- median(x = valores Y) ## Calcular la mediana de Y
-medianX <- median(x = valores X) ## Calcular la mediana de X
-
+# Código para mostrar la gráfica de dispersión
+# Para mayor detalle de la función en la consola de R ejecutar: ?plot
+## 1) Calcular medias
+meanY <- mean(x = valores Y) ## Calcular la media de Y
+meanX <- mean(x = valores X) ## Calcular la media de X
+## 2) Gráfico dispersión
 plot(x = valoresX, y = valoresY, 
     main = 'Título de la Gráfica', 
     xlab = 'Etiqueta del Eje X', ylab = 'Etiqueta del Eje Y')
-
-abline(v = medianX, col='blue') ## Agrega línea vertical con la mediana de X
-abline(h = medianY, col='red') ## Agrega línea horizontal con la mediana de Y")))
+## 3) Incluir medias en el gráfico
+abline(v = meanX, col='blue') ## Agrega línea vertical en la media de X
+text(meanX, min(valoresY), as.character(round(meanX,2)), col = 'blue') ## Agrega el valor de la media de X
+abline(h = meanY, col='red') ## Agrega línea horizontal en la media de Y
+text(min(valoresX), meanY, as.character(round(meanY,2)), col = 'red') ## Agrega el valor de la media de Y")))
+        
   }
 
       
