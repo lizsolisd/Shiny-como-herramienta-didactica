@@ -1,3 +1,4 @@
+options(encoding = "UTF-8")
 library(shiny)
 if (Sys.getlocale()!="en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/C"){
   Sys.setlocale("LC_ALL", 'en_US.UTF-8')

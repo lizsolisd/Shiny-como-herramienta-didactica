@@ -1,3 +1,4 @@
+options(encoding = "UTF-8")
 library(shiny)
 library(dplyr)
 source("E_BasePage.R")
