@@ -65,6 +65,8 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
     
     tema$seleccion <- "Bernoulli"
     tema$discreta <- TRUE
+    tema$xInit <- -1
+    tema$xEnd <- 2
     
     output$TabulacionBernoulli <- renderTable({
       ## Indique la Probabilidad de éxito:
@@ -125,7 +127,7 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
     ## Indique la Probabilidad de éxito:
     proba_exito <- input$probExito
     if(!isNumeric(proba_exito)) {
-      showNotification("La pobabilidad debe ser un valor numerico entre 0 y 1",closeButton = TRUE, type = "error")
+      showNotification("La pobabilidad debe ser un valor numérico entre 0 y 1",closeButton = TRUE, type = "error")
       proba_exito <- 0
     } else {
       if(proba_exito > 1) {
@@ -146,12 +148,17 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
     
     ## Tabla con probabilidades
     tabulacion <- data.frame(x = x1, 
-                             Probabilidad = round(dbinom(x1, size= n_intentos, prob = proba_exito, log = FALSE), 7),
-                             Probabilidad_Acumulada = round(pbinom(x1, size= n_intentos, prob = proba_exito),7) ) 
+                             Probabilidad = round(dbinom(x1, size= n_intentos, prob = proba_exito, log = FALSE), 7)) 
     
     ## Distribucion de probabilidad
-    plot(x = tabulacion$x, y =tabulacion$Probabilidad, xlab="x", ylab="Probabilidad", 
+    if(input$xRangeFixedDensity) {
+      range <- c(input$xInitDensity, input$xEndDensity)
+      plot(x = tabulacion$x, y =tabulacion$Probabilidad, xlab="x", ylab="Probabilidad", xlim = range,
          col="blue", lwd=1.5, main="Función de Masa de Probabilidad", type = "h", lty = 3) 
+    } else {
+      plot(x = tabulacion$x, y =tabulacion$Probabilidad, xlab="x", ylab="Probabilidad", 
+           col="blue", lwd=1.5, main="Función de Masa de Probabilidad", type = "h", lty = 3) 
+    }
     points(tabulacion$x, tabulacion$Probabilidad, pch = 19, col = "blue") 
   }
   
@@ -179,9 +186,16 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
     ## Tabla con probabilidades
     valoresY <-  pbinom(c(0,1:n_intentos), size=n_intentos, prob=proba_exito)
     
-    plot(stepfun(x1, valoresY, right = TRUE) , 
-         verticals = FALSE, xlab = "x", ylab = "Probabilidad", col="purple", lwd=1.5, 
-         main="Función de Distribución Acumulada", pch = 1)
+    if(input$xRangeFixed) {
+      range <- c(input$xInit, input$xEnd)
+      plot(stepfun(x1, valoresY, right = TRUE) ,  xlim = range,
+           verticals = FALSE, xlab = "x", ylab = "Probabilidad", col="purple", lwd=1.5, 
+           main="Función de Distribución Acumulada", pch = 1)
+    } else {
+      plot(stepfun(x1, valoresY, right = TRUE) ,
+           verticals = FALSE, xlab = "x", ylab = "Probabilidad", col="purple", lwd=1.5, 
+           main="Función de Distribución Acumulada", pch = 1)
+    }
   }
   
   output$optionsBernoulli <- renderUI({
@@ -193,6 +207,8 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
   observeEvent(input$probBinomial, {
     tema$seleccion <- "Binomial"
     tema$discreta <- TRUE
+    tema$xInit <- -1
+    tema$xEnd <- 11
     
     output$TabulacionBinomial <- renderTable({
       ## Indique la Probabilidad de éxito:
@@ -279,8 +295,14 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
                              Probabilidad_Acumulada = round(pbinom(x1, size= n_intentos, prob = proba_exito),7) ) 
     
     ## Distribucion de probabilidad
-    plot(x = tabulacion$x, y =tabulacion$Probabilidad, xlab="x", ylab="Probabilidad", 
+    if(input$xRangeFixedDensity) {
+      range <- c(input$xInitDensity, input$xEndDensity)
+      plot(x = tabulacion$x, y =tabulacion$Probabilidad, xlab="x", ylab="Probabilidad", xlim = range,
          col="blue", lwd=1.5, main="Función de Masa de Probabilidad", type = "h",  pch = 19, lty = 3, cex = 5)
+    } else {
+      plot(x = tabulacion$x, y =tabulacion$Probabilidad, xlab="x", ylab="Probabilidad", 
+           col="blue", lwd=1.5, main="Función de Masa de Probabilidad", type = "h",  pch = 19, lty = 3, cex = 5)
+    }
     points(tabulacion$x, tabulacion$Probabilidad, pch = 19, col = "blue") 
   }
   
@@ -316,9 +338,16 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
     ## Tabla con probabilidades
     valoresY <-  pbinom(c(0,1:n_intentos), size=n_intentos, prob=proba_exito)
     
-    plot(stepfun(x1,valoresY, right = TRUE), xlab = "x", ylab = "Probabilidad", 
-         verticals = FALSE, lwd=1.5, main="Función de Distribución Acumulada", pch = 1,
-         col="purple")    
+    if(input$xRangeFixed) {
+      range <- c(input$xInit, input$xEnd)
+      plot(stepfun(x1,valoresY, right = TRUE), xlim = range, xlab = "x", ylab = "Probabilidad", 
+           verticals = FALSE, lwd=1.5, main="Función de Distribución Acumulada", pch = 1,
+           col="purple") 
+    } else {
+      plot(stepfun(x1,valoresY, right = TRUE), xlab = "x", ylab = "Probabilidad", 
+           verticals = FALSE, lwd=1.5, main="Función de Distribución Acumulada", pch = 1,
+           col="purple") 
+    }
   }
   
   output$optionsBinomial <- renderUI({
@@ -331,6 +360,9 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
   observeEvent(input$probPoisson, {
     tema$seleccion <- "Poisson"
     tema$discreta <- TRUE
+    tema$xInit <- -1
+    tema$xEnd <- 13
+    
     output$TabulacionPoisson <- renderTable({
       l <- input$lambda
       
@@ -382,25 +414,40 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
       l <- 0.000001
     }
     
-    xInit = round(l -3*l, 0)
-    if(xInit < 0) {
-      xInit <- 0
-    }
-    xEnd = round(l +3*l, 0)
+    #xInit = round(l -3*l, 0)
+    #if(xInit < 0) {
+    #  xInit <- 0
+    #}
+    #xEnd = round(l +3*l, 0)
     ## Contenido
-    x1 <- c(xInit:xEnd)
+    #x1 <- c(xInit:xEnd)
+    
+    ## Contenido
+    x1 <- seq(from = qpois(0.000001,l,log.p = FALSE),
+              to = qpois(0.999999,l,log.p = FALSE),
+              length.out = 100)
+    
+    ## Tabla con probabilidades
+    valoresY <- unique(ppois(x1,  lambda = l, log.p = FALSE))
+    x1 <- qpois(valoresY, l)
     
     ## Tabla con probabilidades
     tabulacion <- data.frame(x = x1, 
-                             Probabilidad = round(dpois(x1, lambda = l, log = FALSE),7), 
-                             Probabilidad_Acumulada = round(ppois(x1,  lambda = l),7) ) 
+                             Probabilidad = round(dpois(x1, lambda = l, log = FALSE),5), 
+                             Probabilidad_Acumulada = round(ppois(x1,  lambda = l),5) ) 
     
     
-    ## Distribucion de probabilidad
-    plot(x = tabulacion$x, y =tabulacion$Probabilidad, xlab="x", ylab="Probabilidad", 
+    ## Distribucion de  Masa de Probabilidad
+    if(input$xRangeFixedDensity) {
+      range <- c(input$xInitDensity, input$xEndDensity)
+      plot(x = tabulacion$x, y =tabulacion$Probabilidad, xlab="x", ylab="Probabilidad", xlim = range,
          col="blue", lwd=1.5, main="Función de Masa de Probabilidad", pch = 16, type = "h", lty = 3)
+    } else {
+      plot(x = tabulacion$x, y =tabulacion$Probabilidad, xlab="x", ylab="Probabilidad", 
+           col="blue", lwd=1.5, main="Función de Masa de Probabilidad", pch = 16, type = "h", lty = 3)
+    }
     points(tabulacion$x, tabulacion$Probabilidad, pch = 19, col = "blue") 
-    
+    axis(side = 1, at = x1)
   }
   
   graficaAcumuladaPoisson <- function() {
@@ -434,10 +481,18 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
     }
     
     
-    ## Función de densidad acumulada:
-    plot(stepfun(x,valoresY, right = TRUE), 
-         xlab = "x", ylab = "Probabilidad", col="purple", lwd=1.5, verticals = FALSE,
-         main="Función de Distribución Acumulada", pch = 1)
+    ## Gráfica Función de Distribución Acumulada":
+    if(input$xRangeFixed) {
+      range <- c(input$xInit, input$xEnd)
+      plot(stepfun(x,valoresY, right = TRUE), xlim = range,
+           xlab = "x", ylab = "Probabilidad", col="purple", lwd=1.5, verticals = FALSE,
+           main="Función de Distribución Acumulada", pch = 1) 
+    } else {
+      plot(stepfun(x,valoresY, right = TRUE), 
+           xlab = "x", ylab = "Probabilidad", col="purple", lwd=1.5, verticals = FALSE,
+           main="Función de Distribución Acumulada", pch = 1)
+    }
+    axis(side = 1, at = x)
   }
   
   output$optionsPoisson <- renderUI({
@@ -450,6 +505,8 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
   observeEvent(input$probUniforme, {
     tema$seleccion <- "Uniforme"
     tema$discreta <- FALSE
+    tema$xInit <- 0
+    tema$xEnd <- 12
     
     output$SummaryUniforme <- renderTable({
       a <- min(input$limInferior, input$limSuperior)
@@ -489,7 +546,7 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
     b <- input$limSuperior 
     
     if(!(isNumeric(a) & isNumeric(b) & a < b)) {
-      showNotification("Ambos valores deben ser válidos y A > B",closeButton = TRUE, type = "error")
+      showNotification("a debe ser menor que b",closeButton = TRUE, type = "error")
       a <- 0
       b <- 1
     }
@@ -512,21 +569,28 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
     b <- input$limSuperior 
     
     if(!(isNumeric(a) & isNumeric(b) & a < b)) {
-      showNotification("Ambos valores deben ser válidos y el limite inferior debe ser mayor que el limite superior",closeButton = TRUE, type = "error")
+      showNotification("a debe ser menor que b",closeButton = TRUE, type = "error")
       a <- 0
       b <- 1
     }
     
     x1 <- seq(from = a, to = b, by = (b-a)/50)
+    x0 <- seq(from = a - (a+b)/2, to = a, by = (a+b)/100)
+    x2 <- seq(from = b, to = b + (a+b)/2, by = (a+b)/100)
     ## Tabla con probabilidades
-    tabulacion <- data.frame(x = x1, 
-                             Probabilidad = rep(1/ (b-a), length(x1) ),
-                             Probabilidad_Acumulada = round((x1-a)/(b-a),7) )  
+    tabulacion <- data.frame(x = c(x0, x1, x2), 
+                             Probabilidad_Acumulada = c(rep(0, length(x0)), round((x1-a)/(b-a),7),  rep(1, length(x2)))  )
     
     
     ## Función de densidad acumulada:
-    plot(x = tabulacion$x, y = tabulacion$Probabilidad_Acumulada, xlab = "x", ylab = "Probabilidad", col="purple", lwd=2, 
-         main="Función de Distribución Acumulada", type = "l??")
+    if(input$xRangeFixed) {
+      range <- c(input$xInit, input$xEnd)
+      plot(x = tabulacion$x, y = tabulacion$Probabilidad_Acumulada, xlim = range, xlab = "x", ylab = "Probabilidad", col="purple", lwd=2, 
+           main="Función de Distribución Acumulada", type = "l??")
+    } else {
+      plot(x = tabulacion$x, y = tabulacion$Probabilidad_Acumulada, xlab = "x", ylab = "Probabilidad", col="purple", lwd=2, 
+           main="Función de Distribución Acumulada", type = "l??")
+    }
   }
   
   output$optionsUniforme <- renderUI({
@@ -539,6 +603,8 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
   observeEvent(input$probNormal, {
     tema$seleccion <- "Normal"
     tema$discreta <- FALSE
+    tema$xInit <- -5
+    tema$xEnd <- 5
     
     output$SummaryNormal <- renderTable({
       media <- input$media
@@ -592,7 +658,7 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
     media <- input$media
     desviacion <- input$desviacion
     if(!is.numeric(media)) {
-      showNotification("La media debe ser un numero válido",closeButton = TRUE, type = "error")
+      showNotification("La media debe ser un número válido",closeButton = TRUE, type = "error")
       media <- 0
       return()
     }
@@ -604,15 +670,20 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
     }
     
     ## Contenido
-    x <- seq(from  = media-7*desviacion, to = media+7*desviacion, length.out = 1000)
+    x <- seq(from  = media-10*desviacion, to = media+10*desviacion, length.out = 1000)
     
     ## Función de densidad acumulada:
-    curve(pnorm(x, mean = media, sd = desviacion), xlab="", ylab="", from = x[1], to = x[1000], col="purple", lwd=2, main="Función de Distribución Acumulada")
+    if(input$xRangeFixed) {
+      range <- c(input$xInit, input$xEnd)
+      curve(pnorm(x, mean = media, sd = desviacion), xlim = range, xlab="", ylab="", from = x[1], to = x[1000], col="purple", lwd=2, main="Función de Distribución Acumulada")
+    } else {
+      curve(pnorm(x, mean = media, sd = desviacion), xlab="", ylab="", from = x[1], to = x[1000], col="purple", lwd=2, main="Función de Distribución Acumulada")
+    }
   }
   
   output$optionsNormal <- renderUI({
-    return( tagList(numericInput(ns("media"), "µ", value = 200, min = -10000, max = 10000, step = 1),
-                    numericInput(ns("desviacion"), "σ", value = 40, min = 0, max = 1000, step = 1)))
+    return( tagList(numericInput(ns("media"), "µ", value = 0, min = -10000, max = 10000, step = 1),
+                    numericInput(ns("desviacion"), "σ", value = 1, min = 0, max = 1000, step = 1)))
   })
   
   ## Exponencial
@@ -620,6 +691,8 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
   observeEvent(input$probExponencial, {
     tema$seleccion <- "Exponencial"
     tema$discreta <- FALSE
+    tema$xInit <- -1
+    tema$xEnd <- 5
     
     output$SummaryExponencial <- renderTable({
       theta <- input$theta
@@ -650,7 +723,7 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
     #inputs
     theta <- input$theta
     if(!isNumericGreatThan0(theta)) {
-      showNotification("Theta debe ser un numero válido mayor que 0",closeButton = TRUE, type = "error")
+      showNotification("Theta debe ser mayor que 0",closeButton = TRUE, type = "error")
       theta <- 1
     }
     media <- theta
@@ -675,7 +748,7 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
   graficaAcumuladaExponencial <- function(){
     theta <- input$theta
     if(!isNumericGreatThan0(theta)) {
-      showNotification("theta debe ser un numero válido mayor que 0",closeButton = TRUE, type = "error")
+      showNotification("theta debe ser mayor que 0",closeButton = TRUE, type = "error")
       theta <- 1
     }
     media <- theta
@@ -687,7 +760,13 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
     
     
     ## Función de densidad acumulada:
-    curve(pexp(x, rate=1/theta), xlab="", ylab="", from = x[1], to = x[1000], col="purple", lwd=2, main="Función de Distribución Acumulada")
+    if(input$xRangeFixed) {
+      range <- c(input$xInit, input$xEnd)
+      curve(pexp(x, rate=1/theta), xlab="", ylab="", xlim = range,
+            from = x[1], to = x[1000], col="purple", lwd=2, main="Función de Distribución Acumulada")
+    } else {
+      curve(pexp(x, rate=1/theta), xlab="", ylab="", from = x[1], to = x[1000], col="purple", lwd=2, main="Función de Distribución Acumulada")
+    }  
   }
   
   output$optionsExponencial <- renderUI({
@@ -698,6 +777,9 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
   observeEvent(input$probGamma, {
     tema$seleccion <- "Gamma"
     tema$discreta <- FALSE
+    tema$xInit <- -1
+    tema$xEnd <- 5
+    
     output$SummaryGamma <- renderTable({
       alpha <- input$alpha
       theta <- input$theta
@@ -727,12 +809,12 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
     #inputs
     alpha <- input$alpha
     if(!isNumericGreatThan0(alpha)) {
-      showNotification("Alpha debe ser un numero válido mayor que 0",closeButton = TRUE, type = "error")
+      showNotification("Alpha debe ser mayor que 0",closeButton = TRUE, type = "error")
       alpha <- 1
     }
     theta <- input$theta
     if(!isNumericGreatThan0(theta)) {
-      showNotification("Theta debe ser un numero válido mayor que 0",closeButton = TRUE, type = "error")
+      showNotification("Theta debe ser mayor que 0",closeButton = TRUE, type = "error")
       theta <- 1
     }
     
@@ -761,12 +843,12 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
     #inputs
     alpha <- input$alpha
     if(!isNumericGreatThan0(alpha)) {
-      showNotification("Alpha debe ser un numero válido mayor que 0",closeButton = TRUE, type = "error")
+      showNotification("Alpha debe ser mayor que 0",closeButton = TRUE, type = "error")
       alpha <- 1
     }
     theta <- input$theta
     if(!isNumericGreatThan0(theta)) {
-      showNotification("Theta debe ser un numero válido mayor que 0",closeButton = TRUE, type = "error")
+      showNotification("Theta debe ser mayor que 0",closeButton = TRUE, type = "error")
       theta <- 1
     }
     
@@ -778,7 +860,13 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
               length.out = 1000)
     
     ## Función de densidad acumulada:
-    curve(pgamma(x, shape = alpha, scale = theta), xlab="", ylab="", from = x[1], to = x[1000], col="purple", lwd=2, main="Función de Distribución Acumulada")
+    if(input$xRangeFixed) {
+      range <- c(input$xInit, input$xEnd)
+      curve(pgamma(x, shape = alpha, scale = theta), xlab="", ylab="", xlim = range, 
+            from = x[1], to = x[1000], col="purple", lwd=2, main="Función de Distribución Acumulada")
+    } else {
+      curve(pgamma(x, shape = alpha, scale = theta), xlab="", ylab="", from = x[1], to = x[1000], col="purple", lwd=2, main="Función de Distribución Acumulada")
+    }
   }
   
   output$optionsGamma <- renderUI({
@@ -790,6 +878,9 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
   observeEvent(input$probji2, {
     tema$seleccion <- "Ji-Cuadrada"
     tema$discreta <- FALSE
+    tema$xInit <- -1
+    tema$xEnd <- 50
+    
     output$'SummaryJi-Cuadrada' <- renderTable({
       freedom <- input$jiN
       
@@ -818,7 +909,7 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
     freedom <- input$jiN
     #inputs
     if(!isNumericGreatThan0(freedom)) {
-      showNotification("Alpha debe ser un numero válido mayor que 0",closeButton = TRUE, type = "error")
+      showNotification("Alpha debe ser mayor que 0",closeButton = TRUE, type = "error")
       alpha <- 1
     }
     
@@ -847,7 +938,7 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
     freedom <- input$jiN
     #inputs
     if(!isNumericGreatThan0(freedom)) {
-      showNotification("Alpha debe ser un numero válido mayor que 0",closeButton = TRUE, type = "error")
+      showNotification("Alpha debe ser mayor que 0",closeButton = TRUE, type = "error")
       freedom <- 1
     }
     
@@ -858,17 +949,26 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
                         
     
     ## Función de densidad acumulada:
-    curve(pchisq(x, df =freedom), xlab="", ylab="", from = x[1], to = x[1000], col="purple", lwd=2, main="Función de Distribución Acumulada")
+    if(input$xRangeFixed) {
+      range <- c(input$xInit, input$xEnd)
+      curve(pchisq(x, df =freedom), xlab="", ylab="", xlim = range,
+            from = x[1], to = x[1000], col="purple", lwd=2, main="Función de Distribución Acumulada")
+    } else {
+      curve(pchisq(x, df =freedom), xlab="", ylab="", from = x[1], to = x[1000], col="purple", lwd=2, main="Función de Distribución Acumulada")
+    }
   }
   
   output$'optionsJi-Cuadrada' <- renderUI({
-    return( numericInput(ns("jiN"), "n", value = 1, min = 1,  step = 1))
+    return( numericInput(ns("jiN"), "n", value = 20, min = 1,  step = 1))
   })
   
   #T
   observeEvent(input$probT, {
     tema$seleccion <- "T"
     tema$discreta <- FALSE
+    tema$xInit <- -4
+    tema$xEnd <- 4
+    
     output$SummaryT <- renderTable({
       df <- input$gradosLibertad
       
@@ -888,7 +988,7 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
   graficaT <- function() {
     df <- input$gradosLibertad#grados de libertad
     if(!isNumericGreatThan0(df)) {
-      showNotification("Alpha debe ser un numero válido mayor que 0",closeButton = TRUE, type = "error")
+      showNotification("Alpha debe ser mayor que 0",closeButton = TRUE, type = "error")
       df <- 5
     }
     ## Contenido
@@ -905,7 +1005,7 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
   graficaAcumuladaT <- function() {
     df <- input$gradosLibertad#grados de libertad
     if(!isNumericGreatThan0(df)) {
-      showNotification("Alpha debe ser un numero válido mayor que 0",closeButton = TRUE, type = "error")
+      showNotification("Alpha debe ser mayor que 0",closeButton = TRUE, type = "error")
       df <- 5
     }
     ## Contenido
@@ -914,17 +1014,26 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
               length.out = 1000)
     
     ## Función de densidad acumulada:
-    curve(pt(x, df), xlab="", ylab="", from = x[1], to = x[1000], col="purple", lwd=2, main="Función de Distribución Acumulada")
+    if(input$xRangeFixed) {
+      range <- c(input$xInit, input$xEnd)
+      curve(pt(x, df), xlab="", ylab="", from = x[1], to = x[1000], xlim = range, 
+            col="purple", lwd=2, main="Función de Distribución Acumulada")
+    } else {
+      curve(pt(x, df), xlab="", ylab="", from = x[1], to = x[1000], col="purple", lwd=2, main="Función de Distribución Acumulada")
+    }
   }
   
   output$optionsT <- renderUI({
-    return( numericInput(ns("gradosLibertad"), "n", value = 3, min = 1,  step = 1))
+    return( numericInput(ns("gradosLibertad"), "n", value = 10, min = 1,  step = 1))
   })
   
   #F
   observeEvent(input$probF, {
     tema$seleccion <- "F"
     tema$discreta <- FALSE
+    tema$xInit <- -1
+    tema$xEnd <- 5
+    
     output$SummaryF <- renderTable({
       df1 <- input$GL1
       df2 <- input$GL2
@@ -944,11 +1053,11 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
     df1 <- input$GL1#grados de libertad
     df2 <- input$GL2#grados de libertad
     if(!isNumericGreatThan0(df1)) {
-      showNotification("n debe ser un numero válido mayor que 0",closeButton = TRUE, type = "error")
+      showNotification("n debe ser mayor que 0",closeButton = TRUE, type = "error")
       df1 <- 1
     }
     if(!isNumericGreatThan0(df2)) {
-      showNotification("m debe ser un numero válido mayor que 0",closeButton = TRUE, type = "error")
+      showNotification("m debe ser mayor que 0",closeButton = TRUE, type = "error")
       df2 <- 1
     }
     ## Contenido
@@ -966,11 +1075,11 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
     df1 <- input$GL1#grados de libertad
     df2 <- input$GL2#grados de libertad
     if(!isNumericGreatThan0(df1)) {
-      showNotification("n debe ser un numero válido mayor que 0",closeButton = TRUE, type = "error")
+      showNotification("n debe ser mayor que 0",closeButton = TRUE, type = "error")
       df1 <- 1
     }
     if(!isNumericGreatThan0(df2)) {
-      showNotification("m debe ser un numero válido mayor que 0",closeButton = TRUE, type = "error")
+      showNotification("m debe ser mayor que 0",closeButton = TRUE, type = "error")
       df2 <- 1
     }
     ## Contenido
@@ -978,7 +1087,13 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
                           to = qf(.9999, df1, df2, log = FALSE), 
                           length.out = 1000))
     ## Función de densidad acumulada:
-    curve(pf(x, df1, df2, log = FALSE), xlab="", ylab="", from = x[1], to = x[1000], col="purple", lwd=2, main="Función de Distribución Acumulada")
+    if(input$xRangeFixed) {
+      range <- c(input$xInit, input$xEnd)
+      curve(pf(x, df1, df2, log = FALSE), xlab="", ylab="", xlim = range,
+            from = x[1], to = x[1000], col="purple", lwd=2, main="Función de Distribución Acumulada")
+    } else {
+      curve(pf(x, df1, df2, log = FALSE), xlab="", ylab="", from = x[1], to = x[1000], col="purple", lwd=2, main="Función de Distribución Acumulada")
+    }
   }
   
   output$optionsF <- renderUI({
@@ -1012,8 +1127,13 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
         x_polygon <- c(xInit, x_within_bounds, endXvalue)
         y_polygon <- c(0, y_within_bounds, 0)
         
-        textlabel <-sprintf("x = %.4f", round(endXvalue,4))
-        plot(xValues, yValues, type="line", xlab = textlabel, ylab = "", main="Función de Densidad")
+        textlabel <-sprintf("x = %.2f", round(endXvalue,2))
+        if(input$xRangeFixedDensity) {
+          range <- c(input$xInitDensity, input$xEndDensity)
+          plot(xValues, yValues, type="line", xlim = range, xlab = textlabel, ylab = "", main="Función de Densidad")
+        } else {
+          plot(xValues, yValues, type="line", xlab = textlabel, ylab = "", main="Función de Densidad")
+        }
         polygon(x_polygon, y_polygon, col = colorCaclularX)
       } else {
         endXvalue <- as.numeric(input$xValue)
@@ -1043,23 +1163,38 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
           valorAcumulado <- yValorAcumulado[index]
         }
        
-        textlabel <- sprintf("probabilidad acumulada = %f", valorAcumulado)
-        plot(as.numeric(xValues), yValues, type="line", xlab = textlabel, ylab = "",main="Función de Densidad")
+        textlabel <- sprintf("probabilidad acumulada = %.2f", round(valorAcumulado,2))
+        if(input$xRangeFixedDensity) {
+          range <- c(input$xInitDensity, input$xEndDensity)
+          plot(as.numeric(xValues), yValues, xlim = range, type="line", xlab = textlabel, ylab = "",main="Función de Densidad")
+        } else {
+          plot(as.numeric(xValues), yValues, type="line", xlab = textlabel, ylab = "",main="Función de Densidad")
+        }
         polygon(x_polygon, y_polygon, col = colorCalcularA)
       }
     abline(h = 0, col = "black", lwd = 1)
   }
   
   mostrarSelectorDeCalculo <- function() {
-     tagList(radioButtons(ns("calculate"), 
-              label = HTML(paste("P ( X ≤ x ) = a","Calcular :" , sep="<br/>")),
-              choices = c( x = "ValorX",a = "ProbaAcum"),
-              selected = "ValorX"),
-          conditionalPanel( condition = "input['distribuciones-calculate'] == 'ProbaAcum'",
-                             textInput(ns("xValue"), "x = ", 100)),
-          conditionalPanel( condition = "input['distribuciones-calculate'] == 'ValorX'",
-                             numericInput(ns("probabilidadAcumulada"), "a = ", 0.5,  min = 0, max = 0.99999999999, step = .01)),
-          plotOutput(ns("mostrarGrafica")))
+     tagList(
+         tags$div(style="display:inline-block",
+           radioButtons(ns("calculate"), 
+                        label = HTML(paste("","F(x) = p", "","Obtener " , sep="<br/>")),
+                        choices = c( "x: cuantil" = "ValorX", "p: probabilidad acumulada" = "ProbaAcum"),
+                        selected = "ValorX"),
+           conditionalPanel( condition = "input['distribuciones-calculate'] == 'ProbaAcum'",
+                             textInput(ns("xValue"), "hasta x = ", 100)),
+           conditionalPanel( condition = "input['distribuciones-calculate'] == 'ValorX'",
+                             numericInput(ns("probabilidadAcumulada"), "de orden p = ", 0.5,  min = 0, max = 0.99999999999, step = .01))
+         ),
+         tags$div(style="display:inline-block; vertical-align: top;",
+            checkboxInput(ns("xRangeFixedDensity"), "Personalizar valores eje X", FALSE),
+            conditionalPanel( condition = "input['distribuciones-xRangeFixedDensity'] == true",
+                              tagList(numericInput(ns("xInitDensity"), "Valor eje X inicial = ", tema$xInit),
+                                      numericInput(ns("xEndDensity"), "Valor eje X final = ", tema$xEnd)))
+         ),
+         plotOutput(ns("mostrarGrafica"))
+      )
   }
   
   output$mostrarGrafica <- renderPlot({
@@ -1073,7 +1208,12 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
   output$graficaProbabilidades <- renderUI({
     if(tema$discreta) {
       tagList(
-        plotOutput(ns(sprintf("mostrarGrafica"))),
+        checkboxInput(ns("xRangeFixedDensity"), "Personalizar valores eje X", FALSE),
+        conditionalPanel( condition = "input['distribuciones-xRangeFixedDensity'] == true",
+                          tagList(numericInput(ns("xInitDensity"), "Valor eje X inicial = ", tema$xInit),
+                                  numericInput(ns("xEndDensity"), "Valor eje X final = ", tema$xEnd))
+        ),
+        plotOutput(ns("mostrarGrafica")),
         downloadButton(ns('ImageSave'), 'Exportar Imagen')
       )
     }else {
@@ -1086,6 +1226,11 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
   
   output$graficaAcumulada <- renderUI({
     return (tagList(
+      checkboxInput(ns("xRangeFixed"), "Personalizar valores eje X", FALSE),
+      conditionalPanel( condition = "input['distribuciones-xRangeFixed'] == true",
+                        tagList(numericInput(ns("xInit"), "Valor eje X inicial = ", tema$xInit),
+                                numericInput(ns("xEnd"), "Valor eje X final = ", tema$xEnd))
+                        ),
       plotOutput(ns(sprintf("mostrarGraficaAcumulada"))),
       downloadButton(ns('ImageSaveAcumulada'), 'Exportar Imagen')
     ))
