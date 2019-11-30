@@ -1,4 +1,3 @@
-# library(pwr)
 # Prueba de hipotesis
 mostrarPantallaHipotesis <- function(id= "hipotesis", label = "hipotesis") {
   ns <- NS(id)
@@ -24,8 +23,8 @@ mostrarHipotesisOptions <- function(id = "hipotesis", label = "hipotesis") {
 
 setupHipotesisListeners <- function(input, output, session, label = "hipotesis") {
   ns <- session$ns
-  color1 <- "#3366ff"
-  color2 <- "#ff007f"
+  color_azul <- "#3366ff"
+  color_rojo <- "#ff007f"
   ##866bff
   ##0080ff
   value <- reactiveValues(k = 8, error_t2 =0)
@@ -77,13 +76,13 @@ setupHipotesisListeners <- function(input, output, session, label = "hipotesis")
       mu_izq <- input$mu_0
       NombreDerecha <- "H1"
       NombreIzquierda <- "H0"
-      colorIzq <- "#3366ff"
-      colorDer <- "#ff007f" 
+      colorIzq <- color_azul
+      colorDer <- color_rojo
       text_izq <- "µ0"
       text_der <- "µ1"
     }else{
-      colorIzq <- color1
-      colorDer <- color2
+      colorIzq <- color_rojo
+      colorDer <- color_azul
       mu_izq <- input$mu_1
       mu_der <- input$mu_0
       NombreIzquierda <- "H1"
@@ -151,9 +150,11 @@ setupHipotesisListeners <- function(input, output, session, label = "hipotesis")
     # mostrar area rellena
     if(input$showh0) {
       polygon(fillAreaX_izq, fillAreaY_izq, col = colorIzq, density = 40)
+      legend("topleft", legend=c("α"), fill= color_azul, density = 40,  bty="n",cex = 1.5) 
     }
     if(input$showh1) {
       polygon(fillAreaX_der, fillAreaY_der, col = colorDer, density = 20)
+      legend("topright", legend=c("ß"), fill= color_rojo, density = 30,  bty="n",cex = 1.5) 
     }
     
     # mostrar lineas de medias
@@ -177,8 +178,7 @@ setupHipotesisListeners <- function(input, output, session, label = "hipotesis")
     if(input$showh1) {
       mtext(text_der, side = 1, at = mu_der, padj = 5, font = 2, cex = 1.2, col = colorDer)
     }
-    #value$k  <- max(fillAreaX_der)
-    
+
     mtext(sprintf("%.2f",value$k), side = 1, at = value$k, font = 2, cex = 1.2, padj = 3, col = 'darkcyan')
     
     if(input$showh0) {
@@ -198,13 +198,13 @@ setupHipotesisListeners <- function(input, output, session, label = "hipotesis")
     tagList(tags$div(style="padding: 10px;",
         tags$div(style="top: 0;",
           h3("Error Tipo I:"),
-          h4(sprintf("alpha = %s",input$alpha_error))),
+          h4(sprintf("α = %s",input$alpha_error))),
         tags$div(style="top: 0;",
           h3("\nError Tipo II:"),
-          h4(sprintf("beta = %s",round(value$error_t2,4)))),
+          h4(sprintf("ß = %s",round(value$error_t2,4)))),
         tags$div(style="top: 0;",
-           h3("Potencia de la prueba:"),
-           h4(sprintf("potencia = %s",1-round(value$error_t2,4))))
+           h3("\nFunción potencia en μ1:"),
+           h4(sprintf("Π(μ1)= %s",1-round(value$error_t2,4))))
     ))
   }) 
   
@@ -237,7 +237,7 @@ setupHipotesisListeners <- function(input, output, session, label = "hipotesis")
     #     type="l",ylim=c(0,1), col = 'blue')
     plot(xValues, yValues, type='l',ylim=ylim, xlim = xLim, col = 'purple', ylab = "Potencia", 
          xlab = "", main = "Función Potencia",lwd = 2)
-    text(xValues[1], alpha_error + 0.03, "alpha", srt=0.2, col = "salmon")
+    text(xValues[1], alpha_error + 0.05, "α", srt=0.2, col = "salmon", cex =1.5)
     mtext("µ0", side = 1, at = input$mu_0, padj = 5, font = 2, cex = 1.2, col = 'salmon')
     mtext("µ1", side = 1, at = input$mu_1, padj = 5, font = 2, cex = 1.2, col = 'darkcyan')
     
@@ -245,17 +245,17 @@ setupHipotesisListeners <- function(input, output, session, label = "hipotesis")
     lines(c(xValues[1], input$mu_0), c(alpha_error, alpha_error), col = 'salmon', lty = 2, lwd = 2)
     lines(c(input$mu_0, input$mu_0), c(0, alpha_error), col = 'salmon', lty = 2, lwd = 2)
     
-    lines(c(input$mu_1,input$mu_1), c(0,breakValue), lty = 2, lwd=2)#black dotted vertical
-    lines(c(xValues[1],input$mu_1), c(breakValue,breakValue), lty = 2, lwd=2) #black dotted horizontal
+    lines(c(input$mu_1,input$mu_1), c(0,breakValue), lty = 2, lwd=2,col='darkcyan')#black dotted vertical
+    lines(c(xValues[1],input$mu_1), c(breakValue,breakValue), lty = 2, lwd=2, col='darkcyan') #black dotted horizontal
     
-    lines(c(input$mu_1,input$mu_1), c(breakValue,1),lty = 2, lwd=2, col='darkcyan') #red dotted vertical
+   # lines(c(input$mu_1,input$mu_1), c(breakValue,1),lty = 2, lwd=2) #red dotted vertical
     if(input$mu_0 < input$mu_1){
       x_pot_label <- input$mu_1 - (tail(xValues, n=1) - xValues[1])/10
     }else{
       x_pot_label <- input$mu_1 + (tail(xValues, n=1) - xValues[1])/10
     }
-    text(x_pot_label, (1+ breakValue)/2, paste("beta = " , round(1-breakValue, digits = 3), sep=""), 
-         srt=0.2, col = 'darkcyan')
+    text(x_pot_label, (1+ breakValue)/2, paste("1-ß", sep=""), 
+         srt=0.2, col = 'darkcyan', cex = 1.5)
   })
   
 }

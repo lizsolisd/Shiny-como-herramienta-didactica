@@ -507,6 +507,8 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
     tema$discreta <- FALSE
     tema$xInit <- 0
     tema$xEnd <- 12
+    tema$yInit <- 0
+    tema$yEnd <- 2
     
     output$SummaryUniforme <- renderTable({
       a <- min(input$limInferior, input$limSuperior)
@@ -605,6 +607,8 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
     tema$discreta <- FALSE
     tema$xInit <- -5
     tema$xEnd <- 5
+    tema$yInit <- 0
+    tema$yEnd <- 2
     
     output$SummaryNormal <- renderTable({
       media <- input$media
@@ -693,6 +697,8 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
     tema$discreta <- FALSE
     tema$xInit <- -1
     tema$xEnd <- 5
+    tema$yInit <- 0
+    tema$yEnd <- 2
     
     output$SummaryExponencial <- renderTable({
       theta <- input$theta
@@ -779,6 +785,8 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
     tema$discreta <- FALSE
     tema$xInit <- -1
     tema$xEnd <- 5
+    tema$yInit <- 0
+    tema$yEnd <- 2
     
     output$SummaryGamma <- renderTable({
       alpha <- input$alpha
@@ -855,8 +863,8 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
     media <- alpha*theta#cambiar operacion segun el parametro
     
     ## Contenido
-    x <- seq(from  = round(qgamma(.01, shape = alpha, scale = theta),0)-.5, 
-              to = round(qgamma(.99, shape = alpha, scale = theta),0)+3, 
+    x <- seq(from  = round(qgamma(.01, shape = alpha, scale = theta),0)-0.5, 
+              to = round(qgamma(0.999, shape = alpha, scale = theta),0)+3, 
               length.out = 1000)
     
     ## Función de densidad acumulada:
@@ -880,6 +888,8 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
     tema$discreta <- FALSE
     tema$xInit <- -1
     tema$xEnd <- 50
+    tema$yInit <- 0
+    tema$yEnd <- 2
     
     output$'SummaryJi-Cuadrada' <- renderTable({
       freedom <- input$jiN
@@ -909,7 +919,7 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
     freedom <- input$jiN
     #inputs
     if(!isNumericGreatThan0(freedom)) {
-      showNotification("Alpha debe ser mayor que 0",closeButton = TRUE, type = "error")
+      showNotification("n debe ser mayor que 0",closeButton = TRUE, type = "error")
       alpha <- 1
     }
     
@@ -938,13 +948,13 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
     freedom <- input$jiN
     #inputs
     if(!isNumericGreatThan0(freedom)) {
-      showNotification("Alpha debe ser mayor que 0",closeButton = TRUE, type = "error")
+      showNotification("n debe ser mayor que 0",closeButton = TRUE, type = "error")
       freedom <- 1
     }
     
     ## Contenido
-    x <- seq(from  = round(qchisq(.01, df = freedom),0)-.5, 
-             to = round(qchisq(.99,df = freedom),0)+3, 
+    x <- seq(from  = round(qchisq(.001, df = freedom),0)-3, 
+             to = round(qchisq(.999,df = freedom),0)+3, 
              length.out = 1000)
                         
     
@@ -968,6 +978,8 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
     tema$discreta <- FALSE
     tema$xInit <- -4
     tema$xEnd <- 4
+    tema$yInit <- 0
+    tema$yEnd <- 2
     
     output$SummaryT <- renderTable({
       df <- input$gradosLibertad
@@ -989,7 +1001,7 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
     df <- input$gradosLibertad#grados de libertad
     if(!isNumericGreatThan0(df)) {
       showNotification("Alpha debe ser mayor que 0",closeButton = TRUE, type = "error")
-      df <- 5
+      df <- 15
     }
     ## Contenido
     xValues <- unique(seq(from  = qt(.0001, df, log = FALSE), 
@@ -1005,8 +1017,8 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
   graficaAcumuladaT <- function() {
     df <- input$gradosLibertad#grados de libertad
     if(!isNumericGreatThan0(df)) {
-      showNotification("Alpha debe ser mayor que 0",closeButton = TRUE, type = "error")
-      df <- 5
+      showNotification("n debe ser mayor que 0",closeButton = TRUE, type = "error")
+      df <- 15
     }
     ## Contenido
     x <- seq( from  = round(qt(.01, df),0), 
@@ -1024,7 +1036,7 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
   }
   
   output$optionsT <- renderUI({
-    return( numericInput(ns("gradosLibertad"), "n", value = 10, min = 1,  step = 1))
+    return( numericInput(ns("gradosLibertad"), "n", value = 15, min = 1,  step = 1))
   })
   
   #F
@@ -1033,6 +1045,8 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
     tema$discreta <- FALSE
     tema$xInit <- -1
     tema$xEnd <- 5
+    tema$yInit <- 0
+    tema$yEnd <- 2
     
     output$SummaryF <- renderTable({
       df1 <- input$GL1
@@ -1130,9 +1144,19 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
         textlabel <-sprintf("x = %.2f", round(endXvalue,2))
         if(input$xRangeFixedDensity) {
           range <- c(input$xInitDensity, input$xEndDensity)
-          plot(xValues, yValues, type="line", xlim = range, xlab = textlabel, ylab = "", main="Función de Densidad")
+          if(input$yRangeFixedDensity) {
+            yRange <- c(input$yInit, input$yEnd)
+            plot(xValues, yValues, type="line", xlim = range, ylim = yRange, xlab = textlabel, ylab = "", main="Función de Densidad") 
+          } else {
+            plot(xValues, yValues, type="line", xlim = range, xlab = textlabel, ylab = "", main="Función de Densidad")  
+          }
         } else {
-          plot(xValues, yValues, type="line", xlab = textlabel, ylab = "", main="Función de Densidad")
+          if(input$yRangeFixedDensity) {
+            yRange <- c(input$yInit, input$yEnd)
+            plot(xValues, yValues, type="line", xlab = textlabel, ylim = yRange, ylab = "", main="Función de Densidad")  
+          } else {
+            plot(xValues, yValues, type="line", xlab = textlabel, ylab = "", main="Función de Densidad")  
+          }
         }
         polygon(x_polygon, y_polygon, col = colorCaclularX)
       } else {
@@ -1166,9 +1190,19 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
         textlabel <- sprintf("probabilidad acumulada = %.2f", round(valorAcumulado,2))
         if(input$xRangeFixedDensity) {
           range <- c(input$xInitDensity, input$xEndDensity)
-          plot(as.numeric(xValues), yValues, xlim = range, type="line", xlab = textlabel, ylab = "",main="Función de Densidad")
+          if(input$yRangeFixedDensity) {
+            yRange <- c(input$yInit, input$yEnd)
+            plot(as.numeric(xValues), yValues, xlim = range, ylim = yRange, type="line", xlab = textlabel, ylab = "",main="Función de Densidad")
+          } else {
+            plot(as.numeric(xValues), yValues, xlim = range, type="line", xlab = textlabel, ylab = "",main="Función de Densidad") 
+          }
         } else {
-          plot(as.numeric(xValues), yValues, type="line", xlab = textlabel, ylab = "",main="Función de Densidad")
+          if(input$yRangeFixedDensity) {
+            yRange <- c(input$yInit, input$yEnd)
+            plot(as.numeric(xValues), yValues, type="line", ylim = yRange, xlab = textlabel, ylab = "",main="Función de Densidad")
+          } else {
+            plot(as.numeric(xValues), yValues, type="line", xlab = textlabel, ylab = "",main="Función de Densidad") 
+          }
         }
         polygon(x_polygon, y_polygon, col = colorCalcularA)
       }
@@ -1193,6 +1227,12 @@ setupDistribucionesListeners <- function(input, output, session, label = "distri
                               tagList(numericInput(ns("xInitDensity"), "Valor eje X inicial = ", tema$xInit),
                                       numericInput(ns("xEndDensity"), "Valor eje X final = ", tema$xEnd)))
          ),
+         tags$div(style="display:inline-block; vertical-align: top;",
+                  checkboxInput(ns("yRangeFixedDensity"), "Personalizar valores eje Y", FALSE),
+                  conditionalPanel( condition = "input['distribuciones-yRangeFixedDensity'] == true",
+                                    tagList(numericInput(ns("yInit"), "Valor eje Y inicial = ", tema$yInit),
+                                            numericInput(ns("yEnd"), "Valor eje Y final = ", tema$yEnd)))
+                  ),
          plotOutput(ns("mostrarGrafica"))
       )
   }
