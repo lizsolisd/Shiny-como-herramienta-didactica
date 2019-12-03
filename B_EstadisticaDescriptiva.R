@@ -548,15 +548,15 @@ hist(df = Vector de valores ,
       }else if(codigoMostrar == "Barras") {
         return(tags$pre(tags$code("# Código para generar gráfica de barras
 # Para mayor detalle de la función en la consola de R ejecutar: ?plot
-plot(x = véctor de valores categóricos)"
+plot(x = vector de valores categóricos)"
                                   )))
       }else if(codigoMostrar == "Pastel") {
         return(tags$pre(tags$code("# Código para generar gráfica de pastel
 # Para mayor detalle de la función en la consola de R ejecutar: ?pie
 library(dplyr) ## Paquete que permite el uso del pipe %>% 
 ## 1) Calcular frecuencia relativa
-mytable <- nombre_dataframe$nombre_columna_categorica %>% ## Selecciona columna categórica
-table() %>% ## Obtiene frecuencia absoluta por categoria
+mytable <- nombre_dataframe$nombre_columna_categórica %>% ## Selecciona columna categórica
+table() %>% ## Obtiene frecuencia absoluta por categoría
 prop.table() %>% `*`(100)  %>%  round(2)  ## Frecuencia relativa en porcentaje
 ## 2) Generar etiquetas para gráfico
 lbls <- paste(names(mytable), ' ', mytable, '%',sep='')  
@@ -565,8 +565,8 @@ pie(x = mytable, labels = lbls, main = 'Pastel', bg =NA)
 # Solución alterna
 library(dplyr)
 ## 1) Obtener etiquetas y frecuencias relativas
-input_pie <- nombre_data_frame %>% group_by(nombre_columna_categorica) %>% count() %>%  
-    mutate(prop = round(n*100/nrow(df),2), etiquetas = paste0(nombre_columna_categorica, ' ', as.character(prop),'%'))
+input_pie <- nombre_data_frame %>% group_by(nombre_columna_categórica) %>% count() %>%  
+    mutate(prop = round(n*100/nrow(df),2), etiquetas = paste0(nombre_columna_categórica, ' ', as.character(prop),'%'))
 ## 2) Graficar
 pie(x = input_pie$prop, labels = input_pie$etiquetas)
                                   ")))
@@ -597,7 +597,7 @@ stem(x = Vector de valores numéricos)")))
         return(tags$pre(tags$code("
 # Código para generar gráfico de puntos
 # Para mayor detalle de la función en la consola de R ejecutar: ?stripchart
-stripchart(véctor numérico, method = 'stack', offset = .5, at = .15, pch = 19, col= 'blue', main = 'Titulo')")))
+stripchart(vector numérico, method = 'stack', offset = .5, at = .15, pch = 19, col= 'blue', main = 'Título')")))
       }else if(codigoMostrar == "Dispersión") {
         return(tags$pre(tags$code("
 # Código para mostrar la gráfica de dispersión
