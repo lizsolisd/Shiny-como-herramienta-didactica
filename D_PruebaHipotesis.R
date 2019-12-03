@@ -197,14 +197,14 @@ setupHipotesisListeners <- function(input, output, session, label = "hipotesis")
     confianza <- input$confianza
     tagList(tags$div(style="padding: 10px;",
         tags$div(style="top: 0;",
-          h3("Error Tipo I:"),
-          h4(sprintf("α = %s",input$alpha_error))),
+          h3("Error Tipo I"),
+          h4(sprintf("alpha = %s",input$alpha_error))),
         tags$div(style="top: 0;",
-          h3("\nError Tipo II:"),
-          h4(sprintf("ß = %s",round(value$error_t2,4)))),
+          h3("\nError Tipo II"),
+          h4(sprintf("beta = %s",round(value$error_t2,4)))),
         tags$div(style="top: 0;",
-           h3("\nFunción potencia en μ1:"),
-           h4(sprintf("Π(μ1)= %s",1-round(value$error_t2,4))))
+           h3("\nFunción potencia en μ1"),
+           h4(sprintf("1-beta= %s",1-round(value$error_t2,4))))
     ))
   }) 
   
