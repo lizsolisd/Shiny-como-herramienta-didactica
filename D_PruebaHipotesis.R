@@ -42,7 +42,8 @@ setupHipotesisListeners <- function(input, output, session, label = "hipotesis")
   })
 
   output$FrameGeneral <- renderUI ({
-    tagList(
+    tagList(h2("Prueba de hipótesis simple para la media de una distribución Normal con varianza conocida"),
+    
       plotOutput(ns("mostrarGrafica")),
       div(style="display: inline-block;vertical-align:top;",uiOutput(ns("mostrarInformacion"))),
       div(style="display: inline-block;min-width: 600px;",plotOutput(ns("graficaPotencia")))
@@ -218,44 +219,31 @@ setupHipotesisListeners <- function(input, output, session, label = "hipotesis")
 
     yValues <- c()
     if(input$mu_0 < input$mu_1){
-      xValues<-seq(input$mu_0, input$mu_0+ 1.2*abs(input$mu_0 -input$mu_1),l=100)
+      xValues<-c(input$mu_0, input$mu_1)
       for(x in xValues) {
         newVal <- pnorm(q = value$k, mean = x, sd = desviacion)
-        yValues <- c(yValues, 1-newVal )
+        yValues <- c(yValues, 1-newVal)
       }
     }else{
-      xValues<-seq(input$mu_0 - 1.2*abs(input$mu_0 -input$mu_1),input$mu_0,l=100)
+      xValues<-c(input$mu_1, input$mu_0)
       for(x in xValues) {
         newVal <- pnorm(q = value$k, mean = x, sd = desviacion)
-        yValues <- c(yValues, newVal )
+        yValues <- c(yValues, newVal)
       }
     }
     
     cat(xValues[1], " - ", tail(xValues, n=1), "\n")
-    xLim <- c(xValues[1], tail(xValues, n=1))
-    #plot(xValues,pwr.norm.test(d=xValues,n=n,sig.level= alpha_error, alternative="two.sided")$power,
-    #     type="l",ylim=c(0,1), col = 'blue')
-    plot(xValues, yValues, type='l',ylim=ylim, xlim = xLim, col = 'purple', ylab = "Potencia", 
-         xlab = "", main = "Función Potencia",lwd = 2)
-    text(xValues[1], alpha_error + 0.05, "α", srt=0.2, col = "salmon", cex =1.5)
-    mtext("µ0", side = 1, at = input$mu_0, padj = 5, font = 2, cex = 1.2, col = 'salmon')
+    xLim <- c(xValues[1]-1, tail(xValues, n=1)+1)
+    plot(xValues, yValues, ylim=ylim, xlim = xLim, ylab = "Potencia", 
+         xlab = "", main = "Función Potencia",pch = 19, lwd=2)
+    
+    text(input$mu_0, alpha_error + 0.05, "α", srt=0.2, col = "purple", cex =1.5)
+    text(input$mu_1, setdiff(round(yValues,2), alpha_error) + 0.05, "1-ß", srt=0.2, col = 'darkcyan', cex = 1.5)
+    
+    mtext("µ0", side = 1, at = input$mu_0, padj = 5, font = 2, cex = 1.2, col = 'purple')
     mtext("µ1", side = 1, at = input$mu_1, padj = 5, font = 2, cex = 1.2, col = 'darkcyan')
     
-    breakValue <- 1-value$error_t2
-    lines(c(xValues[1], input$mu_0), c(alpha_error, alpha_error), col = 'salmon', lty = 2, lwd = 2)
-    lines(c(input$mu_0, input$mu_0), c(0, alpha_error), col = 'salmon', lty = 2, lwd = 2)
     
-    lines(c(input$mu_1,input$mu_1), c(0,breakValue), lty = 2, lwd=2,col='darkcyan')#black dotted vertical
-    lines(c(xValues[1],input$mu_1), c(breakValue,breakValue), lty = 2, lwd=2, col='darkcyan') #black dotted horizontal
-    
-   # lines(c(input$mu_1,input$mu_1), c(breakValue,1),lty = 2, lwd=2) #red dotted vertical
-    if(input$mu_0 < input$mu_1){
-      x_pot_label <- input$mu_1 - (tail(xValues, n=1) - xValues[1])/10
-    }else{
-      x_pot_label <- input$mu_1 + (tail(xValues, n=1) - xValues[1])/10
-    }
-    text(x_pot_label, (1+ breakValue)/2, paste("1-ß", sep=""), 
-         srt=0.2, col = 'darkcyan', cex = 1.5)
   })
   
 }
